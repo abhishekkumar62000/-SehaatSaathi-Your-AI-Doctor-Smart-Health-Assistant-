@@ -8,7 +8,6 @@ langchain-groq==0.2.4
 pypiwin32
 speechrecognition
 pyttsx3
-PyAudio
 pyaudio
 gtts
 pygame==2.6.1
