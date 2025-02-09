@@ -47,7 +47,7 @@ with st.sidebar:
     st.header("⚙ Configuration")
     selected_model = st.selectbox("Choose Model", ["deepseek-r1-distill-llama-70b"], index=0)
     language = st.selectbox("Select Response Language", ["English", "Hindi"])
-
+    
     st.markdown("## SehaatSaathi Capabilities🤷‍♂️")
     st.markdown("""
     - 🤖 Your AI Doctor
@@ -84,13 +84,12 @@ def speak_text(text, lang="en"):
 
 def recognize_speech():
     try:
-        mic_list = sr.Microphone.list_microphone_names()
-        if not mic_list:
+        if not sr.Microphone.list_microphone_names():
             return "❌ No microphone detected! Check your device settings."
         with sr.Microphone() as source:
             st.info("🎤 Speak now...")
             recognizer.adjust_for_ambient_noise(source)
-            audio = recognizer.listen(source)
+            audio = recognizer.listen(source, timeout=5)
             text = recognizer.recognize_google(audio)
             return text
     except sr.UnknownValueError:
@@ -119,11 +118,7 @@ def extract_text_from_image(image_file):
         return "❌ Error processing image. Ensure it's clear."
 
 if "message_log" not in st.session_state:
-    st.session_state.message_log = [{
-        "role": "ai",
-        "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉",
-        "think": None
-    }]
+    st.session_state.message_log = [{"role": "ai", "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉"}]
 
 chat_container = st.container()
 
@@ -136,39 +131,19 @@ with col2:
         user_query = recognize_speech()
         st.text(f"🗣️ You Said: {user_query}")
 
-with chat_container:
-    for i, message in enumerate(st.session_state.message_log):
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if message["role"] == "ai":
-                if st.button(f"🔊 Speak Response {i+1}", key=f"button_{i}"):
-                    speak_text(message["content"], lang="hi" if language == "Hindi" else "en")
-
 if user_query:
-    st.session_state.message_log.append({"role": "user", "content": user_query, "think": None})
     with st.spinner("🧠 AI Doctor Thinking..."):
-        prompt_chain = ChatPromptTemplate.from_messages([system_prompt] + [
-            HumanMessagePromptTemplate.from_template(msg["content"]) if msg["role"] == "user" else AIMessagePromptTemplate.from_template(msg["content"])
-            for msg in st.session_state.message_log
-        ])
-        processing_pipeline = prompt_chain | ai_doctor | StrOutputParser()
-        full_response = "".join(processing_pipeline.stream({}))
-        st.session_state.message_log.append({"role": "ai", "content": full_response})
-        speak_text(full_response, lang="hi" if language == "Hindi" else "en")
-    st.rerun()
-
-# Feature 3: Emergency Contact Button
-
-def emergency_contact():
-    st.warning("🚨 In case of a medical emergency, call:")
-    st.write("📞 **Ambulance:** 108")
-    st.write("🏥 **Nearest Hospital:** Check Google Maps")
-    st.write("[🔍 Find Nearby Hospitals](https://www.google.com/maps/search/nearest+hospital/)")
-
-if st.sidebar.button("🚑 Emergency Contact"):
-    emergency_contact()
+        ai_response = ai_doctor.invoke(user_query)
+        st.session_state.message_log.append({"role": "ai", "content": ai_response})
+        st.chat_message("ai").markdown(ai_response)
+        speak_text(ai_response, lang="hi" if language == "Hindi" else "en")
 
 uploaded_file = st.file_uploader("📤 Upload Medical Report (PDF/Image)", type=["pdf", "png", "jpg", "jpeg"])
 if uploaded_file:
     report_text = extract_text_from_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else extract_text_from_image(uploaded_file)
     st.write("📄 Extracted Text:", report_text)
+    if report_text:
+        with st.spinner("🔬 Analyzing Medical Report..."):
+            report_analysis = ai_doctor.invoke(f"Analyze this medical report and suggest medicines: {report_text}")
+            st.write("💊 AI Analysis:", report_analysis)
+            speak_text(report_analysis, lang="hi" if language == "Hindi" else "en")
