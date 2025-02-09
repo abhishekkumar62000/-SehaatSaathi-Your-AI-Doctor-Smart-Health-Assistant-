@@ -14,6 +14,9 @@ from langchain_core.prompts import (
     ChatPromptTemplate,
 )
 import base64
+from PyPDF2 import PdfReader
+from PIL import Image
+import pytesseract
 
 # Load environment variables
 load_dotenv()
@@ -59,7 +62,7 @@ with st.sidebar:
 ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
 
 system_prompt = SystemMessagePromptTemplate.from_template(
-    "You are an AI Doctor named SehaatSaathi. Provide concise, specific medical advice based on symptoms, recommend medicines briefly, and always suggest consulting a real doctor for serious issues. Avoid unnecessary elaboration or thinking responses."
+    "You are an AI Doctor named SehaatSaathi. Provide medical advice based on symptoms, recommend medicines, and always suggest consulting a real doctor for serious issues."
 )
 
 recognizer = sr.Recognizer()
@@ -76,10 +79,36 @@ def speak_text(text, lang="en"):
     audio_html = f'<audio autoplay="true" controls><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
     st.markdown(audio_html, unsafe_allow_html=True)
 
+# Feature 1: Voice Input (Speech-to-Text)
+def recognize_speech():
+    with sr.Microphone() as source:
+        st.info("🎤 Speak now...")
+        recognizer.adjust_for_ambient_noise(source)
+        audio = recognizer.listen(source)
+        try:
+            text = recognizer.recognize_google(audio)
+            return text
+        except sr.UnknownValueError:
+            return "❌ Sorry, couldn't recognize your voice!"
+        except sr.RequestError:
+            return "❌ Speech service unavailable!"
+
+# Feature 2: Medical Report Analysis (PDF/Image OCR)
+def extract_text_from_pdf(pdf_file):
+    pdf_reader = PdfReader(pdf_file)
+    text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
+    return text if text else "❌ No text found in PDF."
+
+def extract_text_from_image(image_file):
+    image = Image.open(image_file)
+    text = pytesseract.image_to_string(image)
+    return text if text else "❌ No text detected in image."
+
 if "message_log" not in st.session_state:
     st.session_state.message_log = [{
         "role": "ai",
-        "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉"
+        "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉",
+        "think": None
     }]
 
 chat_container = st.container()
@@ -87,6 +116,11 @@ chat_container = st.container()
 col1, col2 = st.columns([4, 1])
 with col1:
     user_query = st.chat_input("Describe your symptoms or ask about a medicine... 🤒💊")
+
+with col2:
+    if st.button("🎙️ Speak Symptoms"):
+        user_query = recognize_speech()
+        st.text(f"🗣️ You Said: {user_query}")
 
 with chat_container:
     for i, message in enumerate(st.session_state.message_log):
@@ -97,16 +131,30 @@ with chat_container:
                     speak_text(message["content"], lang="hi" if language == "Hindi" else "en")
 
 if user_query:
-    st.session_state.message_log.append({"role": "user", "content": user_query})
-    with st.spinner("🧠 AI Doctor Processing..."):
+    st.session_state.message_log.append({"role": "user", "content": user_query, "think": None})
+    with st.spinner("🧠 AI Doctor Thinking..."):
         prompt_chain = ChatPromptTemplate.from_messages([system_prompt] + [
             HumanMessagePromptTemplate.from_template(msg["content"]) if msg["role"] == "user" else AIMessagePromptTemplate.from_template(msg["content"])
             for msg in st.session_state.message_log
         ])
         processing_pipeline = prompt_chain | ai_doctor | StrOutputParser()
-        full_response = processing_pipeline.invoke({})
-
+        full_response = "".join(processing_pipeline.stream({}))
         st.session_state.message_log.append({"role": "ai", "content": full_response})
         speak_text(full_response, lang="hi" if language == "Hindi" else "en")
-
     st.rerun()
+
+# Feature 3: Emergency Contact Button
+def emergency_contact():
+    st.warning("🚨 In case of a medical emergency, call:")
+    st.write("📞 **Ambulance:** 108")
+    st.write("🏥 **Nearest Hospital:** Check Google Maps")
+    st.write("[🔍 Find Nearby Hospitals](https://www.google.com/maps/search/nearest+hospital/)")
+
+if st.sidebar.button("🚑 Emergency Contact"):
+    emergency_contact()
+
+# Feature 2 Usage
+uploaded_file = st.file_uploader("📤 Upload Medical Report (PDF/Image)", type=["pdf", "png", "jpg", "jpeg"])
+if uploaded_file:
+    report_text = extract_text_from_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else extract_text_from_image(uploaded_file)
+    st.write("📄 Extracted Text:", report_text)
