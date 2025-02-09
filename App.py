@@ -17,6 +17,7 @@ import base64
 from PyPDF2 import PdfReader
 from PIL import Image
 import pytesseract
+import pyaudio
 
 # Load environment variables
 load_dotenv()
@@ -79,30 +80,43 @@ def speak_text(text, lang="en"):
     audio_html = f'<audio autoplay="true" controls><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
     st.markdown(audio_html, unsafe_allow_html=True)
 
-# Feature 1: Voice Input (Speech-to-Text)
+# Feature 1: Voice Input (Speech-to-Text) - Fixed
+
 def recognize_speech():
-    with sr.Microphone() as source:
-        st.info("🎤 Speak now...")
-        recognizer.adjust_for_ambient_noise(source)
-        audio = recognizer.listen(source)
-        try:
+    try:
+        mic_list = sr.Microphone.list_microphone_names()
+        if not mic_list:
+            return "❌ No microphone detected! Check your device settings."
+        with sr.Microphone() as source:
+            st.info("🎤 Speak now...")
+            recognizer.adjust_for_ambient_noise(source)
+            audio = recognizer.listen(source)
             text = recognizer.recognize_google(audio)
             return text
-        except sr.UnknownValueError:
-            return "❌ Sorry, couldn't recognize your voice!"
-        except sr.RequestError:
-            return "❌ Speech service unavailable!"
+    except sr.UnknownValueError:
+        return "❌ Sorry, couldn't recognize your voice!"
+    except sr.RequestError:
+        return "❌ Speech service unavailable!"
+    except OSError:
+        return "❌ No microphone found! Check your settings."
 
-# Feature 2: Medical Report Analysis (PDF/Image OCR)
+# Feature 2: Medical Report Analysis (PDF/Image OCR) - Fixed
+
 def extract_text_from_pdf(pdf_file):
-    pdf_reader = PdfReader(pdf_file)
-    text = "\n".join([page.extract_text() for page in pdf_reader.pages if page.extract_text()])
-    return text if text else "❌ No text found in PDF."
+    try:
+        pdf_reader = PdfReader(pdf_file)
+        text = "\n".join([page.extract_text() or "" for page in pdf_reader.pages])
+        return text.strip() if text.strip() else "❌ No text found in PDF."
+    except Exception:
+        return "❌ Error processing PDF. Ensure it's not a scanned document."
 
 def extract_text_from_image(image_file):
-    image = Image.open(image_file)
-    text = pytesseract.image_to_string(image)
-    return text if text else "❌ No text detected in image."
+    try:
+        image = Image.open(image_file)
+        text = pytesseract.image_to_string(image)
+        return text.strip() if text.strip() else "❌ No text detected in image."
+    except Exception:
+        return "❌ Error processing image. Ensure it's clear."
 
 if "message_log" not in st.session_state:
     st.session_state.message_log = [{
@@ -144,6 +158,7 @@ if user_query:
     st.rerun()
 
 # Feature 3: Emergency Contact Button
+
 def emergency_contact():
     st.warning("🚨 In case of a medical emergency, call:")
     st.write("📞 **Ambulance:** 108")
@@ -153,7 +168,6 @@ def emergency_contact():
 if st.sidebar.button("🚑 Emergency Contact"):
     emergency_contact()
 
-# Feature 2 Usage
 uploaded_file = st.file_uploader("📤 Upload Medical Report (PDF/Image)", type=["pdf", "png", "jpg", "jpeg"])
 if uploaded_file:
     report_text = extract_text_from_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else extract_text_from_image(uploaded_file)
