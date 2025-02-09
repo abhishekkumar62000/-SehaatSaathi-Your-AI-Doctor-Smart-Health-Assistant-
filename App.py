@@ -59,7 +59,7 @@ with st.sidebar:
 ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
 
 system_prompt = SystemMessagePromptTemplate.from_template(
-    "You are an AI Doctor named SehaatSaathi. Provide concise, specific medical advice based on symptoms, recommend medicines briefly, and always suggest consulting a real doctor for serious issues. Avoid unnecessary elaboration."
+    "You are an AI Doctor named SehaatSaathi. Provide concise, specific medical advice based on symptoms, recommend medicines briefly, and always suggest consulting a real doctor for serious issues. Avoid unnecessary elaboration or thinking responses."
 )
 
 recognizer = sr.Recognizer()
