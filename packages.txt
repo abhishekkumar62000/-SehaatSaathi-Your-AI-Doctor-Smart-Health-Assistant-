@@ -1,5 +1,1 @@
 portaudio19-dev
-pytesseract
-pillow
-pypdf2
-base64
