@@ -59,7 +59,7 @@ with st.sidebar:
 ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
 
 system_prompt = SystemMessagePromptTemplate.from_template(
-    "You are an AI Doctor named SehaatSaathi. Provide medical advice based on symptoms, recommend medicines, and always suggest consulting a real doctor for serious issues."
+    "You are an AI Doctor named SehaatSaathi. Provide concise, specific medical advice based on symptoms, recommend medicines briefly, and always suggest consulting a real doctor for serious issues. Avoid unnecessary elaboration."
 )
 
 recognizer = sr.Recognizer()
@@ -79,8 +79,7 @@ def speak_text(text, lang="en"):
 if "message_log" not in st.session_state:
     st.session_state.message_log = [{
         "role": "ai",
-        "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉",
-        "think": None
+        "content": "Hello! I am your SehaatSaathi AI Doctor. How can I help you today? 🤖💉"
     }]
 
 chat_container = st.container()
@@ -98,14 +97,14 @@ with chat_container:
                     speak_text(message["content"], lang="hi" if language == "Hindi" else "en")
 
 if user_query:
-    st.session_state.message_log.append({"role": "user", "content": user_query, "think": None})
-    with st.spinner("🧠 AI Doctor Thinking..."):
+    st.session_state.message_log.append({"role": "user", "content": user_query})
+    with st.spinner("🧠 AI Doctor Processing..."):
         prompt_chain = ChatPromptTemplate.from_messages([system_prompt] + [
             HumanMessagePromptTemplate.from_template(msg["content"]) if msg["role"] == "user" else AIMessagePromptTemplate.from_template(msg["content"])
             for msg in st.session_state.message_log
         ])
         processing_pipeline = prompt_chain | ai_doctor | StrOutputParser()
-        full_response = "".join(processing_pipeline.stream({}))
+        full_response = processing_pipeline.invoke({})
 
         st.session_state.message_log.append({"role": "ai", "content": full_response})
         speak_text(full_response, lang="hi" if language == "Hindi" else "en")
