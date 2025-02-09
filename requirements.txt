@@ -14,3 +14,7 @@ gtts
 pydub
 langchain
 soundfile
+pytesseract
+pillow
+pypdf2
+base64
