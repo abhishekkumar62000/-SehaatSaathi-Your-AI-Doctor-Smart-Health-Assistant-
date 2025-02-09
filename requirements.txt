@@ -17,4 +17,3 @@ soundfile
 pytesseract
 pillow
 pypdf2
-base64
