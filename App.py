@@ -35,11 +35,11 @@ with st.sidebar:
     """)
     st.markdown("👨‍💻 Developer: Abhishek ❤️ Yadav")
 
-ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3, tone='Indian', language='Hindi')
+ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
 
 recognizer = sr.Recognizer()
 
-def speak_text(text, lang="en"):
+def speak_text(text, lang="hi"):
     if not isinstance(text, str) or not text.strip():
         return  # Avoid speaking empty or invalid responses
     tts = gTTS(text=text, lang=lang, slow=False)
@@ -61,7 +61,7 @@ def recognize_speech():
             st.info("🎤 Speak now...")
             recognizer.adjust_for_ambient_noise(source)
             audio = recognizer.listen(source, timeout=5)
-            text = recognizer.recognize_google(audio)
+            text = recognizer.recognize_google(audio, language="hi-IN")
             return text
     except sr.UnknownValueError:
         return "❌ Could not understand your voice."
@@ -81,41 +81,41 @@ def extract_text_from_pdf(pdf_file):
 def extract_text_from_image(image_file):
     try:
         image = Image.open(image_file)
-        text = pytesseract.image_to_string(image)
+        text = pytesseract.image_to_string(image, lang="hin")
         return text.strip() if text.strip() else "❌ No text detected."
     except Exception:
         return "❌ Error processing image."
 
 if "message_log" not in st.session_state:
-    st.session_state.message_log = [{"role": "ai", "content": "Hello! I am your AI Doctor. How can I help? 🤖💉"}]
+    st.session_state.message_log = [{"role": "ai", "content": "नमस्ते! मैं आपका AI डॉक्टर हूँ। आपकी कैसे सहायता कर सकता हूँ? 🤖💉"}]
 
 chat_container = st.container()
 
 col1, col2 = st.columns([4, 1])
 with col1:
-    user_query = st.chat_input("Describe your symptoms... 🤒💊")
+    user_query = st.chat_input("अपने लक्षण बताएं... 🤒💊")
 with col2:
-    if st.button("🎙️ Speak Symptoms"):
+    if st.button("🎙️ बोलकर बताएं"):
         user_query = recognize_speech()
-        st.text(f"🗣️ You Said: {user_query}")
+        st.text(f"🗣️ आपने कहा: {user_query}")
 
 if user_query:
-    with st.spinner("🧠 AI Doctor Thinking..."):
+    with st.spinner("🧠 AI डॉक्टर सोच रहा है..."):
         ai_response = ai_doctor.invoke(user_query)
         if hasattr(ai_response, "content"):
             ai_response = ai_response.content.strip()
         st.session_state.message_log.append({"role": "ai", "content": ai_response})
         st.chat_message("ai").markdown(ai_response)
-        speak_text(ai_response, lang="hi" if language == "Hindi" else "en")
+        speak_text(ai_response, lang="hi")
 
-uploaded_file = st.file_uploader("📤 Upload Medical Report (PDF/Image)", type=["pdf", "png", "jpg", "jpeg"])
+uploaded_file = st.file_uploader("📤 मेडिकल रिपोर्ट अपलोड करें (PDF/छवि)", type=["pdf", "png", "jpg", "jpeg"])
 if uploaded_file:
     report_text = extract_text_from_pdf(uploaded_file) if uploaded_file.type == "application/pdf" else extract_text_from_image(uploaded_file)
-    st.write("📄 Extracted Text:", report_text)
+    st.write("📄 निकाला गया टेक्स्ट:", report_text)
     if report_text:
-        with st.spinner("🔬 Analyzing Medical Report..."):
-            report_analysis = ai_doctor.invoke(f"Analyze this report: {report_text}")
+        with st.spinner("🔬 मेडिकल रिपोर्ट का विश्लेषण हो रहा है..."):
+            report_analysis = ai_doctor.invoke(f"इस मेडिकल रिपोर्ट का विश्लेषण करें: {report_text}")
             if hasattr(report_analysis, "content"):
                 report_analysis = report_analysis.content.strip()
-            st.write("💊 AI Analysis:", report_analysis)
-            speak_text(report_analysis, lang="hi" if language == "Hindi" else "en")
+            st.write("💊 AI विश्लेषण:", report_analysis)
+            speak_text(report_analysis, lang="hi")
