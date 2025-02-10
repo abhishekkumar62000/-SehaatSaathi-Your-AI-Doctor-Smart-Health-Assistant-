@@ -20,6 +20,18 @@ st.set_page_config("🤖SehaatSaathi-Your AI Doctor😷", page_icon="🧠", layo
 st.title("🤖SehaatSaathi - AI Doctor Assistant🧑‍⚕️")
 st.caption("🚀 Instant Medical Advice & Medicine Recommendations.")
 
+SehaatSaathi_path = "SehaatSaathi.png"  # Ensure this file is in the same directory as your script
+try:
+    st.sidebar.image(SehaatSaathi_path)
+except FileNotFoundError:
+    st.sidebar.warning("SehaatSaathi.png file not found. Please check the file path.")
+    
+Doctor_path = "Doctor.jpg"  # Ensure this file is in the same directory as your script
+try:
+    st.sidebar.image(Doctor_path)
+except FileNotFoundError:
+    st.sidebar.warning("Doctor.jpg file not found. Please check the file path.")
+
 with st.sidebar:
     st.header("⚙ Configuration")
     selected_model = st.selectbox("Choose Model", ["deepseek-r1-distill-llama-70b"], index=0)
@@ -34,6 +46,11 @@ with st.sidebar:
     - 🏥 Health Advice
     """)
     st.markdown("👨‍💻 Developer: Abhishek ❤️ Yadav")
+    developer_path = "my.jpg"  # Ensure this file is in the same directory as your script
+try:
+    st.sidebar.image(developer_path)
+except FileNotFoundError:
+    st.sidebar.warning("my.jpg file not found. Please check the file path.")
 
 ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
 
