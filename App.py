@@ -1,4 +1,3 @@
-# Import libraries
 import os
 import streamlit as st
 import speech_recognition as sr
@@ -17,7 +16,6 @@ import base64
 from PyPDF2 import PdfReader
 from PIL import Image
 import pytesseract
-import pyaudio
 
 # Load environment variables
 load_dotenv()
@@ -69,16 +67,27 @@ system_prompt = SystemMessagePromptTemplate.from_template(
 recognizer = sr.Recognizer()
 
 def speak_text(text, lang="en"):
-    tts = gTTS(text=text, lang=lang, slow=False)
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as temp_audio:
-        tts.save(temp_audio.name)
-        temp_audio_path = temp_audio.name
-    with open(temp_audio_path, "rb") as audio_file:
-        audio_bytes = audio_file.read()
-        audio_base64 = base64.b64encode(audio_bytes).decode()
-    os.remove(temp_audio_path)
-    audio_html = f'<audio autoplay="true" controls><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
-    st.markdown(audio_html, unsafe_allow_html=True)
+    try:
+        temp_audio_path = os.path.join(tempfile.gettempdir(), "speech.mp3")
+        
+        # Generate speech and save to a temp file
+        tts = gTTS(text=text, lang=lang, slow=False)
+        tts.save(temp_audio_path)
+
+        # Read the file as bytes
+        with open(temp_audio_path, "rb") as audio_file:
+            audio_bytes = audio_file.read()
+            audio_base64 = base64.b64encode(audio_bytes).decode()
+
+        # Embed the audio in HTML
+        audio_html = f'<audio autoplay="true" controls><source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3"></audio>'
+        st.markdown(audio_html, unsafe_allow_html=True)
+
+        # Cleanup: Remove the file after usage
+        os.remove(temp_audio_path)
+    
+    except Exception as e:
+        st.error(f"Error generating speech: {str(e)}")
 
 # Feature 1: Voice Input (Speech-to-Text) - Fixed
 
