@@ -17,3 +17,4 @@ soundfile
 pytesseract
 pillow
 pypdf2
+ffmpeg
