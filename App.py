@@ -15,9 +15,9 @@ load_dotenv()
 
 groq_api_key = os.getenv('GROQ_API_KEY')
 
-st.set_page_config("🤖SehaatSaathi-Your AI Doctor😷", page_icon="🧠", layout="wide")
+st.set_page_config("🤖SehaatSaathi-Your AI Doctor Health Assistant😷", page_icon="🧠", layout="wide")
 
-st.title("🤖SehaatSaathi - AI Doctor Assistant🧑‍⚕️")
+st.title("🤖SehaatSaathi-Your AI Doctor🧑‍⚕️ Smart Health Assistant😷")
 st.caption("🚀 Instant Medical Advice & Medicine Recommendations.")
 
 SehaatSaathi_path = "SehaatSaathi.png"  # Ensure this file is in the same directory as your script
@@ -53,6 +53,12 @@ except FileNotFoundError:
     st.sidebar.warning("my.jpg file not found. Please check the file path.")
 
 ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
+
+# System prompt configuration
+system_prompt = SystemMessagePromptTemplate.from_template(
+    "You are an AI Doctor Your SehaatSaathi.Developer by Abhishek Yadav From Bihar India, Provide medical advice based on symptoms, recommend medicines, "
+    "and always suggest consulting a real doctor for serious issues."
+)
 
 recognizer = sr.Recognizer()
 
@@ -104,7 +110,7 @@ def extract_text_from_image(image_file):
         return "❌ Error processing image."
 
 if "message_log" not in st.session_state:
-    st.session_state.message_log = [{"role": "ai", "content": "नमस्ते! मैं आपका AI डॉक्टर हूँ। आपकी कैसे सहायता कर सकता हूँ? 🤖💉"}]
+    st.session_state.message_log = [{"role": "ai", "content": "नमस्ते! मैं आपका  SehaatSaathi AI डॉक्टर हूँ। आपकी कैसे सहायता कर सकता हूँ? 🤖💉"}]
 
 chat_container = st.container()
 
