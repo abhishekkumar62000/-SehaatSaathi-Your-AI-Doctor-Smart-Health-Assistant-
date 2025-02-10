@@ -35,7 +35,7 @@ with st.sidebar:
     """)
     st.markdown("👨‍💻 Developer: Abhishek ❤️ Yadav")
 
-ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3)
+ai_doctor = ChatGroq(api_key=groq_api_key, model=selected_model, temperature=0.3, tone='Indian', language='Hindi')
 
 recognizer = sr.Recognizer()
 
