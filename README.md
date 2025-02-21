@@ -1,10 +1,10 @@
 # 🤖SehaatSaathi-Your AI Doctor🧑‍⚕️ Smart Health Assistant😷
-
-
-
+![SehaatSaathi](https://github.com/user-attachments/assets/435213a4-db93-4079-a3dd-9be44676491e)
+![pg1](https://github.com/user-attachments/assets/ed4b38a8-9c3d-4885-97b2-46d3d5f47a45)
+![pg3](https://github.com/user-attachments/assets/0122a504-6b28-4b9e-a16e-a9a2c5ec60c1)
 
 # 🤖SehaatSaathi-Your AI Doctor🧑‍⚕️ Smart Health Assistant😷
-
+Welcome To,
 SehaatSaathi is an **Open-Source Smart Health Assistant** that provides AI-powered **remote medical consultation**, **diagnosis**, **treatment suggestions**, and much more. Our goal is to make healthcare **accessible, affordable, and AI-driven** for everyone, including those in rural and underprivileged areas. 🚑🏡
 
 ---
